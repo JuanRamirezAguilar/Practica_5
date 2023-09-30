@@ -8,9 +8,10 @@ class ChequeRechazado : public Cheque {
 
     public:
         ChequeRechazado();
-        ChequeRechazado(int, char[], int, double);
+        ChequeRechazado(int, const char[], int, double);
+        ChequeRechazado(const ChequeRechazado& copia);
         ~ChequeRechazado();
 
         void imprimeDatos();
-        ChequeRechazado operator = (const ChequeRechazado& copia);
+        ChequeRechazado& operator = (const ChequeRechazado& copia);
 };

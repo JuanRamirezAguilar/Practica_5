@@ -10,12 +10,13 @@ class Cheque {
     public:
         Cheque();
         Cheque(int, const char[], int, double);
+        Cheque(const Cheque& copia);
         ~Cheque();
         
         int getNumero();
         void imprimeDatos();
 
-        Cheque operator = (const Cheque& copia);
+        Cheque& operator = (const Cheque& copia);
 };
 
 #endif // CHEQUE_HPP

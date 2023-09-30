@@ -1,3 +1,15 @@
+/*
+    I5888 - Estructuras de Datos 2
+    D06 - L, Mi 7 a 9 pm - 2023B
+
+    Integrantes equipo 6:
+
+    Ramírez Aguilar Juan Antonio
+    Ramírez Martin Angel Omar
+    Ramírez Martínez Luis Felipe
+    Ríos Ventura Jexan Alexander
+*/
+
 #include <iostream>
 #include <fstream>
 #include <windows.h>
@@ -31,8 +43,21 @@ int main () {
     Pila<ChequeRechazado, 2> chequesRechazados;
 
     // Se crean los archivos de los cheques
-    ifstream archivoChequesSalida(NAMEFILECHEQUE, ios::out | ios::app | ios::binary);
-    ifstream archivoChequesReSalida(NAMEFILECHEQUERE, ios::out | ios::app | ios::binary);
+    ifstream archivoChequesSalida;
+    ifstream archivoChequesReSalida;
+
+    if (!ifstream(NAMEFILECHEQUE) or !ifstream(NAMEFILECHEQUERE)) {
+        // Si no existen, crea los archivos
+        ofstream createFile(NAMEFILECHEQUE);
+        ofstream createReFile(NAMEFILECHEQUERE);
+        createFile.close();
+        createReFile.close();
+    }
+
+    // Se abren los archivos
+    archivoChequesSalida.open(NAMEFILECHEQUE, ios::in | ios::binary);
+    archivoChequesReSalida.open(NAMEFILECHEQUERE, ios::in | ios::binary);   
+
     if (!archivoChequesSalida.is_open() or !archivoChequesReSalida.is_open()) {
         throw ios_base::failure("No se pudieron abrir los archivos.");
     }
@@ -40,7 +65,7 @@ int main () {
     // Se cargan los datos del archivo binario
     Cheque chequeTemp;
     while (archivoChequesSalida.read(reinterpret_cast<char*>(&chequeTemp), sizeof(Cheque))) {
-        cheques.push(chequeTemp);
+            cheques.push(chequeTemp);
     }
 
     // Se cargan los datos del archivo binario
@@ -89,8 +114,8 @@ int main () {
                     Cheque miCheque(numCheque, nameBanco.c_str(), numCuenta, monto);
 
                     // Se añade el cheque a la pila
-                    cheques + miCheque;
-                    cout << endl << endl << "Cheque añadido a la pila."; pausa();
+                    cheques.push(miCheque);
+                    cout << endl << "Cheque añadido a la pila."; pausa();
                 } else {
                     cout << "La pila de cheques ya esta llena..." <<endl; pausa();
                 }
@@ -102,7 +127,7 @@ int main () {
                     cheques.top().imprimeDatos(); pausa();
 
                     cheques.pop();
-                    cout << endl << "Cheque procesado..."; pausa();
+                    cout << "Cheque procesado..."; pausa();
 
                 } else {
                     cout << "La pila de cheques esta vacia: " <<endl; pausa();
@@ -110,55 +135,117 @@ int main () {
                 break;
 
             case REGISTRARCHEQUERE:
+                if (!chequesRechazados.llena()) {
+                    // Variables para el llenado de la clase
+                    int numCheque, numCuenta;
+                    string nameBanco;
+                    double monto;
+                    cout<<endl<<endl;
+
+                    cout << "Dame el numero del cheque rechazado: ";
+                    cin >> numCheque;
+                    cout << "Dame el nombre del banco: ";
+                    fflush(stdin); getline(cin, nameBanco);
+                    cout << "Dame el numero de cuenta: ";
+                    cin >> numCuenta;
+                    cout << "Dame el monto del cheque rechazado: ";
+                    cin >> monto;
+
+                    // Se instancia el cheque
+                    ChequeRechazado miChequeRe(numCheque, nameBanco.c_str(), numCuenta, monto);
+
+                    // Se añade el cheque a la pila
+                    chequesRechazados.push(miChequeRe);
+                    cout << endl << "Cheque rechazado añadido a la pila."; pausa();
+                } else {
+                    cout << "La pila de cheques rechazados ya esta llena..." <<endl; pausa();
+                }
                 break;
+
             case PROCESARCHEQUERE:
+                if (!chequesRechazados.vacia()) {
+                    cout << endl << "Se va procesar el cheque rechazado: " <<endl;
+                    chequesRechazados.top().imprimeDatos(); pausa();
+
+                    chequesRechazados.pop();
+                    cout << "Cheque rechazado procesado..."; pausa();
+
+                } else {
+                    cout << "La pila de cheques rechazados esta vacia: " <<endl; pausa();
+                }
                 break;
 
             case SALIR: {
                 ofstream archivoChequesEntrada;
                 ofstream archivoChequesRechazadosEntrada;
-                Cheque chequeAux;
-                ChequeRechazado chequeReAux;
 
-                // Guardar en el archivo. Se abre en modo trunc para que los datos anteriores se borren
-                archivoChequesEntrada.open(NAMEFILECHEQUE, ios::in | ios::trunc | ios::binary);
-                archivoChequesRechazadosEntrada.open(NAMEFILECHEQUERE, ios::in | ios::trunc | ios::binary);
-                if (!archivoChequesSalida.is_open() or !archivoChequesRechazadosEntrada.is_open()) {
+                cout << endl << "Guardando los datos..." <<endl;
+
+                // Abrimos los archivos
+                archivoChequesEntrada.open(NAMEFILECHEQUE, ios_base::out | ios_base::binary);
+                archivoChequesRechazadosEntrada.open(NAMEFILECHEQUERE, ios_base::out | ios_base::binary);
+
+                // Revisa si los archivos se abrieron correctamente
+                if (!archivoChequesEntrada.is_open() or !archivoChequesRechazadosEntrada.is_open()) {
                     throw ios_base::failure("Error al abrir el archivo.");
                 }
 
-                // Revisa si las pila no esta vacia
-                if (!cheques.vacia()) {
-                    for (int i = 0; i < cheques.getTam(); i++) {
-                        chequeAux = cheques.top();
-                        archivoChequesEntrada.seekp((cheques.top().getNumero() - 1) * int(sizeof(Cheque)));
-                        archivoChequesEntrada.write(reinterpret_cast<char*>(&chequeAux), sizeof(Cheque));
-                        cheques.pop();
-                    }    
+                // Revisa si las pila cheques no esta vacia
+                while (!cheques.vacia()) {
+                    Cheque chequeAux = cheques.top();
+                    archivoChequesEntrada.write(reinterpret_cast<char*>(&chequeAux), sizeof(Cheque));
+                    cheques.pop();
                 }
 
-                // Revisa si las pila no esta vacia
-                if (!chequesRechazados.vacia()) {
-                    for (int i = 0; i < chequesRechazados.getTam(); i++) {
-                        chequeReAux = chequesRechazados.top();
-                        archivoChequesRechazadosEntrada.seekp((chequesRechazados.top().getNumero() - 1) * int(sizeof(Cheque)));
-                        archivoChequesRechazadosEntrada.write(reinterpret_cast<char*>(&chequeReAux), sizeof(Cheque));
-                        chequesRechazados.pop();
-                    }
+                // Revisa si las pila chequesRechazados no esta vacia
+                while (!chequesRechazados.vacia()) {
+                    ChequeRechazado chequeReAux = chequesRechazados.top();
+                    archivoChequesRechazadosEntrada.write(reinterpret_cast<char*>(&chequeReAux), sizeof(ChequeRechazado));
+                    chequesRechazados.pop();
                 }
-
-                archivoChequesSalida.close();
+                
+                archivoChequesEntrada.close();
                 archivoChequesRechazadosEntrada.close();
+                cout << "Datos guardados exitosamente..." <<endl;
             }break;
 
-            case 6:
-                if (!cheques.vacia()) {
-                    cheques.top().imprimeDatos(); pausa();
+            // Este case solo sirve para checar si las pilas se estaban llenanando correctamente
+            // Es una opcion logica
+            case 77:{
+                int opcImpr;
+
+                cout << endl << "1) cheques." <<endl;
+                cout << endl << "2) cheques rechazados" <<endl;
+                cin >> opcImpr;
+
+                if (opcImpr == 1) {
+                    Pila<Cheque, 2> PilaAux1 = cheques;
+                    if (!PilaAux1.vacia()) {
+                        while (!PilaAux1.vacia()) {
+                            PilaAux1.top().imprimeDatos();
+                            PilaAux1.pop();
+                        } pausa();
+                    } else {
+                        cout << "Pila vacia"; pausa();
+                    }
+                } else if (opcImpr == 2) {
+                    Pila<ChequeRechazado, 2> PilaAux2 = chequesRechazados;
+                    if (!PilaAux2.vacia()) {
+                        PilaAux2 = chequesRechazados;
+                        while (!PilaAux2.vacia()) {
+                            PilaAux2.top().imprimeDatos();
+                            PilaAux2.pop();
+                        } pausa();
+                    } else {
+                        cout << "Pila vacia"; pausa();
+                    }
                 } else {
-                    cout << endl << "Vacia..."; pausa();
+                    cout << "opcion equivocada"; pausa();
                 }
-                break;
+            }break;
+
             default:
+                cout << endl << "Opcion equivocada, intentelo de nuevo..."; pausa();
                 break;
         }
 

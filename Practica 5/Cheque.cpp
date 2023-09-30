@@ -14,6 +14,10 @@ Cheque::Cheque(int numCta, const char nomBco[], int cta, double mon) {
 
 Cheque::~Cheque() {}
 
+Cheque::Cheque(const Cheque& copia) : numero(copia.numero), cuentaADepositar(copia.cuentaADepositar), monto(copia.monto) {
+    strcpy(banco, copia.banco);
+}
+
 int Cheque::getNumero() { return numero; }
 
 void Cheque::imprimeDatos() {
@@ -23,7 +27,9 @@ void Cheque::imprimeDatos() {
     std::cout << std::endl << "Monto: " << monto <<std::endl;
 }
 
-Cheque Cheque::operator = (const Cheque& copia) {
+Cheque& Cheque::operator = (const Cheque& copia) {
+    if (this == &copia) { return *this; }
+    
     numero = copia.numero;
     cuentaADepositar = copia.cuentaADepositar;
     strcpy(banco, copia.banco);
